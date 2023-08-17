@@ -71,7 +71,7 @@ def docker_images(config, targets, force):
         if force or image not in images:
             if 'from' in params.get('args', {}):
                 pull(params['args']['from'], platform)
-            shell('docker build -f %s --platform %s %s -t %s docker/' % (params['source'], platform, args, image))
+            shell('docker build -f %s --no-cache --platform %s %s -t %s docker/' % (params['source'], platform, args, image))
 
 def get_version(src_dir, iteration):
     rel_ver = open(os.path.join(src_dir, 'VERSION'), 'r').read().strip()

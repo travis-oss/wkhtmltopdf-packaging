@@ -15,46 +15,97 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         package_target:
-          - almalinux8-aarch64
-          - almalinux8-ppc64le
-          - almalinux8-x86_64
-          - almalinux9-aarch64
-          - almalinux9-ppc64le
-          - almalinux9-x86_64
-          - bionic-ppc64el
-          - bookworm-amd64
-          - bookworm-arm64
-          - bookworm-i386
-          - bookworm-ppc64el
-          - buster-ppc64el
+          - stretch-amd64
+          - stretch-arm64
+          - stretch-i386
+
+          - buster-amd64
+          - buster-arm64
+          - buster-i386
+
           - bullseye-amd64
           - bullseye-arm64
           - bullseye-i386
-          - bullseye-ppc64el
-          - fedora37-aarch64
-          - fedora37-x86_64
-          - focal-ppc64el
+
+          - bookworm-amd64
+          - bookworm-arm64
+          - bookworm-i386
+
+          - xenial-amd64
+          - xenial-arm64
+          - xenial-i386
+
+          - bionic-amd64
+          - bionic-arm64
+          - bionic-i386
+
+          - focal-amd64
+          - focal-arm64
+
           - jammy-amd64
           - jammy-arm64
-          - jammy-ppc64el
-          - raspberrypi.bookworm-armhf
-          - raspberrypi.bullseye-armhf
+
+          - almalinux8-x86_64
+          - almalinux8-aarch64
+
+          - almalinux9-x86_64
+          - almalinux9-aarch64
+
+          - rockylinux8-x86_64
+          - rockylinux8-aarch64
+
+          - rockylinux9-x86_64
+          - rockylinux9-aarch64
+
+          - oraclelinux8-x86_64
+          - oraclelinux8-aarch64
+
+          - oraclelinux9-x86_64
+          - oraclelinux9-aarch64
+
+          - fedora37-x86_64
+          - fedora37-aarch64
+
+          - fedora38-x86_64
+          - fedora38-aarch64
+
+          - centos7-x86_64
+          - centos7-aarch64
+          - centos7-i686
+
+          - centos8-x86_64
+          - centos8-aarch64
+
+          - amazonlinux2-x86_64
+          - amazonlinux2-aarch64
+
+          - amazonlinux2023-x86_64
+          - amazonlinux2023-aarch64
+
+          - amazonlinux2_lambda-x86_64
+          - amazonlinux2_lambda-aarch64
+
+          - opensuse.leap15-x86_64
+          - opensuse.leap15-aarch64
+
+          - mxe-cross-win32
+          - mxe-cross-win64
       fail-fast: false
     steps:
       - name: configure docker
-        run:  |
+        run: |
           echo '{ "experimental": true }' | sudo tee /etc/docker/daemon.json
           sudo systemctl restart docker
       - name: checkout packaging
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: packaging
       - name: checkout wkhtmltopdf with submodules
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: wkhtmltopdf/wkhtmltopdf
           path: wkhtmltopdf
@@ -62,12 +113,59 @@ jobs:
           ref: ${{ github.event.inputs.wkhtmltopdf_ref }}
       - name: build
         run: cd packaging && python3 ./build package-docker --clean --iteration ${{ github.event.inputs.packaging_iteration }} ${{ matrix.package_target }} ../wkhtmltopdf
-      - uses: softprops/action-gh-release@v0.1.14
+      - uses: softprops/action-gh-release@v1
         with:
           name: ${{ github.event.inputs.packaging_release }}
           tag_name: ${{ github.event.inputs.packaging_release }}-${{ github.event.inputs.packaging_iteration }}
           target_commitish: ${{ github.sha }}
           files: "packaging/targets/wkhtmltox*.*"
+          fail_on_unmatched_files: false
+          draft: true
+          body: All packages were built and uploaded automatically as a part of [this run](${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}), using this [wkhtmltopdf branch/tag](https://github.com/wkhtmltopdf/wkhtmltopdf/tree/${{ github.event.inputs.wkhtmltopdf_ref }}).
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        package_target:
+          - macos-cocoa
+      fail-fast: false
+    steps:
+      - name: install dependencies
+        run: |
+          sudo xcode-select --switch /Library/Developer/CommandLineTools
+          brew update
+          brew install cmake conan@1 python3
+          brew link conan@1
+          pip3 install pyyaml
+          sudo gem install fpm --no-document
+      - name: checkout packaging
+        uses: actions/checkout@v3
+        with:
+          path: packaging
+      - name: checkout wkhtmltopdf with submodules
+        uses: actions/checkout@v3
+        with:
+          repository: wkhtmltopdf/wkhtmltopdf
+          path: wkhtmltopdf
+          submodules: true
+          ref: ${{ github.event.inputs.wkhtmltopdf_ref }}
+      - name: config build
+        run: |
+          sed -i -e 's/CFLAGS CXXFLAGS LDFLAGS/CFLAGS CXXFLAGS OBJECTIVE_CFLAGS LDFLAGS/g' wkhtmltopdf/qt/configure
+          sed -i -e 's/compiler.version=9.0/compiler.version=14.0/g' packaging/.conan/profiles/macos-cocoa
+      - name: build
+        env:
+          MACOSX_DEPLOYMENT_TARGET: 10.7
+        run: |
+          cd packaging
+          python3 ./build vagrant --clean --version - - --iteration ${{ github.event.inputs.packaging_iteration }} ${{ matrix.package_target }} ../wkhtmltopdf
+      - uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ github.event.inputs.packaging_release }}
+          tag_name: ${{ github.event.inputs.packaging_release }}-${{ github.event.inputs.packaging_iteration }}
+          target_commitish: ${{ github.sha }}
+          files: "packaging/wkhtmltox*.pkg"
           fail_on_unmatched_files: false
           draft: true
           body: All packages were built and uploaded automatically as a part of [this run](${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}), using this [wkhtmltopdf branch/tag](https://github.com/wkhtmltopdf/wkhtmltopdf/tree/${{ github.event.inputs.wkhtmltopdf_ref }}).

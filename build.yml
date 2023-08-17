@@ -14,6 +14,29 @@ docker-prefix: "wkhtmltopdf/0.12:"
 #   qemu:           emulate via qemu-user-static image for specified platform
 #
 docker-targets:
+  stretch:
+    source: docker/Dockerfile.debian_9
+    args:
+      from: debian:stretch
+    output: deb
+    matrix: ['amd64', 'i386', 'arm64', 'armhf', 'armel', 'ppc64el']
+    depend: >
+      ca-certificates
+      fontconfig
+      libc6
+      libfreetype6
+      libjpeg62-turbo
+      libpng16-16
+      libssl1.1
+      libstdc++6
+      libx11-6
+      libxcb1
+      libxext6
+      libxrender1
+      xfonts-75dpi
+      xfonts-base
+      zlib1g
+
   bullseye:
     source: docker/Dockerfile.debian
     args:
@@ -230,6 +253,30 @@ docker-targets:
       xfonts-base
       zlib1g
 
+  xenial:
+    source: docker/Dockerfile.debian
+    args:
+      from: ubuntu:xenial
+      jpeg: libjpeg-turbo8-dev
+    output: deb
+    matrix: ['amd64', 'i386', 'arm64', 'armhf', 'ppc64el']
+    depend: >
+      ca-certificates
+      fontconfig
+      libc6
+      libfreetype6
+      libjpeg-turbo8
+      libpng12-0
+      libssl1.0.0
+      libstdc++6
+      libx11-6
+      libxcb1
+      libxext6
+      libxrender1
+      xfonts-75dpi
+      xfonts-base
+      zlib1g
+
   almalinux9:
     source: docker/Dockerfile.centos
     args:
@@ -274,12 +321,144 @@ docker-targets:
       xorg-x11-fonts-Type1
       zlib
 
+  rockylinux9:
+    source: docker/Dockerfile.centos
+    args:
+      from: rockylinux:9
+    output: rpm
+    matrix: ['x86_64', 'aarch64', 'ppc64le']
+    depend: >
+      ca-certificates
+      fontconfig
+      freetype
+      glibc
+      libjpeg
+      libpng
+      libstdc++
+      libX11
+      libXext
+      libXrender
+      openssl
+      xorg-x11-fonts-75dpi
+      xorg-x11-fonts-Type1
+      zlib
+
+  rockylinux8:
+    source: docker/Dockerfile.centos
+    args:
+      from: rockylinux:8
+    output: rpm
+    matrix: ['x86_64', 'aarch64']
+    depend: >
+      ca-certificates
+      fontconfig
+      freetype
+      glibc
+      libjpeg
+      libpng
+      libstdc++
+      libX11
+      libXext
+      libXrender
+      openssl
+      xorg-x11-fonts-75dpi
+      xorg-x11-fonts-Type1
+      zlib
+
+  oraclelinux9:
+    source: docker/Dockerfile.centos
+    args:
+      from: oraclelinux:9
+    output: rpm
+    matrix: ['x86_64', 'aarch64']
+    depend: >
+      ca-certificates
+      fontconfig
+      freetype
+      glibc
+      libjpeg
+      libpng
+      libstdc++
+      libX11
+      libXext
+      libXrender
+      openssl
+      xorg-x11-fonts-75dpi
+      xorg-x11-fonts-Type1
+      zlib
+
+  oraclelinux8:
+    source: docker/Dockerfile.centos
+    args:
+      from: oraclelinux:8
+    output: rpm
+    matrix: [ 'x86_64', 'aarch64' ]
+    depend: >
+      ca-certificates
+      fontconfig
+      freetype
+      glibc
+      libjpeg
+      libpng
+      libstdc++
+      libX11
+      libXext
+      libXrender
+      openssl
+      xorg-x11-fonts-75dpi
+      xorg-x11-fonts-Type1
+      zlib
+
+  centos8:
+    source: docker/Dockerfile.centos_8
+    args:
+      from: centos:8
+    output: rpm
+    matrix: ['x86_64', 'aarch64', 'ppc64le']
+    depend: >
+      ca-certificates
+      fontconfig
+      freetype
+      glibc
+      libjpeg
+      libpng
+      libstdc++
+      libX11
+      libXext
+      libXrender
+      openssl
+      xorg-x11-fonts-75dpi
+      xorg-x11-fonts-Type1
+      zlib
+
   centos7:
     source: docker/Dockerfile.centos
     args:
       from: centos:7
     output: rpm
     matrix: ['x86_64', 'i686', 'aarch64', 'ppc64le']
+    depend: >
+      ca-certificates
+      fontconfig
+      freetype
+      glibc
+      libjpeg
+      libpng
+      libstdc++
+      libX11
+      libXext
+      libXrender
+      openssl
+      xorg-x11-fonts-75dpi
+      xorg-x11-fonts-Type1
+      zlib
+
+  fedora38:
+    source: docker/Dockerfile.centos
+    args:
+      from: fedora:38
+    output: rpm
+    matrix: ['x86_64', 'aarch64', 'ppc64le']
     depend: >
       ca-certificates
       fontconfig
@@ -384,7 +563,7 @@ docker-targets:
       from: amazonlinux:2
     output: lambda_zip
     after_compile: amazonlinux2_lambda
-    arch: x86_64
+    matrix: ['x86_64', 'aarch64']
 
   opensuse.leap15:
     source: docker/Dockerfile.opensuse
